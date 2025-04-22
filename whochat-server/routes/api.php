@@ -7,3 +7,4 @@ Route::post('/connect', [ChatController::class, 'connect']);
 Route::post('/send', [ChatController::class, 'sendMessage']);
 Route::post('/disconnect', [ChatController::class, 'disconnect']);
 Route::post('/reconnect', [ChatController::class, 'reconnect']);
+Route::get('/reconnect', [ChatController::class, 'status']);

@@ -14,30 +14,45 @@ class ChatController extends Controller
      */
     public function connect(Request $request)
     {
-        $user_id = uniqid(); // Generate a unique ID for the new user
-
-        // Try to find a user already waiting in cache
-        $waiting_user = Cache::pull('waiting_user');
-
-        if ($waiting_user && $waiting_user !== $user_id) {
-            // If found, immediately pair this user with the waiting user
+        $user_id = uniqid();
+    
+        if (!Cache::has('online_users')) {
+            Cache::put('online_users', 0, now()->addDays(1));
+        }
+        if (!Cache::has('waiting_users')) {
+            Cache::put('waiting_users', [], now()->addDays(1));
+        }
+    
+        Cache::increment('online_users');
+    
+        $waiting_users = Cache::get('waiting_users', []);
+    
+        if (!empty($waiting_users)) {
+            // Take the first waiting user
+            $waiting_user = array_shift($waiting_users);
+    
+            // Save updated waiting list back
+            Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
+    
             $this->pairUsers($user_id, $waiting_user);
-
+    
             return response()->json([
                 'message' => 'Paired!',
                 'your_id' => $user_id,
                 'partner_id' => $waiting_user,
             ]);
         } else {
-            // No waiting user found, put this user into waiting list
-            Cache::put('waiting_user', $user_id, now()->addMinutes(5)); // Wait for 5 mins
-
+            // No one waiting, add this user to the waiting list
+            $waiting_users[] = $user_id;
+            Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
+    
             return response()->json([
                 'message' => 'Waiting for a partner...',
                 'your_id' => $user_id,
             ]);
         }
     }
+    
 
     /**
      * Handle sending a message from one user to another.
@@ -62,16 +77,23 @@ class ChatController extends Controller
     {
         $user_id = $request->input('user_id');
 
-        // If user was waiting, remove them from the queue
-        if (Cache::get('waiting_user') === $user_id) {
-            Cache::forget('waiting_user');
+        // Remove from waiting users if found
+        $waiting_users = Cache::get('waiting_users', []);
+        if (($key = array_search($user_id, $waiting_users)) !== false) {
+            unset($waiting_users[$key]);
+            $waiting_users = array_values($waiting_users); // Reindex array
+            Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
         }
+
+        // Decrement online users
+        Cache::decrement('online_users');
 
         // Broadcast a disconnection event
         broadcast(new RandomChat('Disconnected', $user_id, null));
 
         return response()->json(['status' => 'Disconnected']);
     }
+
 
     /**
      * Handle user reconnection to find a new partner.
@@ -80,29 +102,51 @@ class ChatController extends Controller
     public function reconnect(Request $request)
     {
         $user_id = $request->input('user_id');
-
-        // Try to find another waiting user
-        $waiting_user = Cache::pull('waiting_user');
-
-        if ($waiting_user && $waiting_user !== $user_id) {
-            // Pair with the new waiting user
+    
+        if (!Cache::has('waiting_users')) {
+            Cache::put('waiting_users', [], now()->addDays(1));
+        }
+    
+        $waiting_users = Cache::get('waiting_users', []);
+    
+        if (!empty($waiting_users)) {
+            $waiting_user = array_shift($waiting_users);
+    
+            Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
+    
             $this->pairUsers($user_id, $waiting_user);
-
+    
             return response()->json([
                 'message' => 'Re-Paired!',
                 'your_id' => $user_id,
                 'partner_id' => $waiting_user,
             ]);
         } else {
-            // No user available, put yourself back into waiting
-            Cache::put('waiting_user', $user_id, now()->addMinutes(5));
-
+            $waiting_users[] = $user_id;
+            Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
+    
             return response()->json([
                 'message' => 'Waiting again for a chatter...',
                 'your_id' => $user_id,
             ]);
         }
     }
+    
+    
+
+    public function status()
+    {
+        $online = Cache::get('online_users', 0);
+        $waiting_users = Cache::get('waiting_users', []);
+        $waiting = count($waiting_users);
+    
+        return response()->json([
+            'online_users' => $online,
+            'waiting_users' => $waiting,
+        ]);
+    }
+    
+
 
     /**
      * Helper function to broadcast connection event between two users.
