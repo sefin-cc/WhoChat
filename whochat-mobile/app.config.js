@@ -35,7 +35,8 @@ export default {
           resizeMode: "contain",
           backgroundColor: "#ffffff",
         }
-      ]
+      ],
+      "expo-font"
     ],
     experiments: {
       typedRoutes: true,
