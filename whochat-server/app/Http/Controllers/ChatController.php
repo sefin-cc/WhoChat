@@ -12,7 +12,7 @@ class ChatController extends Controller
      * Handle user connection request.
      * Try to find another waiting user, or wait if none found.
      */
-    public function connect(Request $request)
+    public function connect()
     {
         $user_id = uniqid();
     
@@ -25,13 +25,13 @@ class ChatController extends Controller
     
         Cache::increment('online_users');
     
+        // Save this user's status
+        Cache::put('user_' . $user_id, 'online', now()->addSeconds(30)); // Expires after 30 seconds if no heartbeat
+    
         $waiting_users = Cache::get('waiting_users', []);
     
         if (!empty($waiting_users)) {
-            // Take the first waiting user
             $waiting_user = array_shift($waiting_users);
-    
-            // Save updated waiting list back
             Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
     
             $this->pairUsers($user_id, $waiting_user);
@@ -42,7 +42,6 @@ class ChatController extends Controller
                 'partner_id' => $waiting_user,
             ]);
         } else {
-            // No one waiting, add this user to the waiting list
             $waiting_users[] = $user_id;
             Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
     
@@ -76,23 +75,36 @@ class ChatController extends Controller
     public function disconnect(Request $request)
     {
         $user_id = $request->input('user_id');
-
+    
         // Remove from waiting users if found
         $waiting_users = Cache::get('waiting_users', []);
         if (($key = array_search($user_id, $waiting_users)) !== false) {
             unset($waiting_users[$key]);
-            $waiting_users = array_values($waiting_users); // Reindex array
+            $waiting_users = array_values($waiting_users);
             Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
         }
-
+    
         // Decrement online users
         Cache::decrement('online_users');
-
-        // Broadcast a disconnection event
+    
+        // Find the partner
+        $partner_id = Cache::get('partner_' . $user_id);
+    
+        if ($partner_id) {
+            // Notify the partner
+            broadcast(new RandomChat('PartnerDisconnected', $partner_id, null));
+    
+            // Remove the partner mappings
+            Cache::forget('partner_' . $user_id);
+            Cache::forget('partner_' . $partner_id);
+        }
+    
+        // Broadcast user disconnected
         broadcast(new RandomChat('Disconnected', $user_id, null));
-
+    
         return response()->json(['status' => 'Disconnected']);
     }
+    
 
 
     /**
@@ -133,28 +145,59 @@ class ChatController extends Controller
     }
     
     
-
     public function status()
     {
+        // First, clean up expired users from the waiting list
+        $this->cleanup();
+    
+        // Get the number of online users and the number of waiting users
         $online = Cache::get('online_users', 0);
         $waiting_users = Cache::get('waiting_users', []);
         $waiting = count($waiting_users);
     
+        // Return the status as JSON
         return response()->json([
             'online_users' => $online,
             'waiting_users' => $waiting,
         ]);
     }
     
-
+    
+    public function heartbeat(Request $request)
+    {
+        $user_id = $request->input('user_id');
+        if ($user_id) {
+            Cache::put('user_' . $user_id, 'online', now()->addSeconds(30));
+            return response()->json(['status' => 'Heartbeat received']);
+        }
+        return response()->json(['status' => 'Missing user_id'], 400);
+    }
+    
 
     /**
      * Helper function to broadcast connection event between two users.
      */
     private function pairUsers($user1, $user2)
     {
-        // Notify both users that they are now connected
+        Cache::put('partner_' . $user1, $user2, now()->addMinutes(30));
+        Cache::put('partner_' . $user2, $user1, now()->addMinutes(30));
+    
         broadcast(new RandomChat('Connected!', $user1, $user2));
         broadcast(new RandomChat('Connected!', $user2, $user1));
     }
+
+    private function cleanup()
+    {
+        $waiting_users = Cache::get('waiting_users', []);
+        $alive_waiting = [];
+
+        foreach ($waiting_users as $user_id) {
+            if (Cache::has('user_' . $user_id)) {
+                $alive_waiting[] = $user_id;
+            }
+        }
+
+        Cache::put('waiting_users', $alive_waiting, now()->addMinutes(5));
+    }
+
 }

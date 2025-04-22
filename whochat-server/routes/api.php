@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 
@@ -7,4 +8,5 @@ Route::post('/connect', [ChatController::class, 'connect']);
 Route::post('/send', [ChatController::class, 'sendMessage']);
 Route::post('/disconnect', [ChatController::class, 'disconnect']);
 Route::post('/reconnect', [ChatController::class, 'reconnect']);
-Route::get('/reconnect', [ChatController::class, 'status']);
+Route::get('/status', [ChatController::class, 'status']);
+Route::post('/heartbeat', [ChatController::class, 'heartbeat']);
