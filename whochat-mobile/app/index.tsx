@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Image, StyleSheet, View, Text, TouchableHighlight, Modal, ActivityIndicator, StatusBar } from 'react-native';
 import { useFetchStatusQuery, useConnectUserMutation, useDisconnectUserMutation } from '../services/chatApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUserIds } from '@/redux/chatSlice';
+import { clearChat, setUserIds } from '@/redux/chatSlice';
 import { useEffect, useState } from 'react';
 import { RootState } from '../redux/store';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -21,6 +21,7 @@ export default function HomeScreen() {
   const handleConnect = async () => {
     try {
       const res = await connectUser().unwrap();
+      dispatch(clearChat());
       dispatch(setUserIds({ userId: res.your_id, partnerId: res.partner_id }));
       // console.log(res);
       setWaiting(true);

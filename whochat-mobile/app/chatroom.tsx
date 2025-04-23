@@ -29,17 +29,6 @@ export default function ChatRoom() {
   const [reconnectUser] = useReconnectUserMutation();
 
   const [sendHeartbeat] = useSendHeartbeatMutation();
-
-  // const fakeMessages = [
-  //   { from: "2", to: "1", message: "Hey, how are you?" },
-  //   { from: null, to: "2", message: "I'm good! You?" },
-  //   { from: "2", to: "1", message: "Doing great, just chilling 😎" },
-  //   { from: "2", to: "1", message: "Hey, how are you?" },
-  //   { from: null, to: "2", message: "I'm good! You?" },
-  //   { from: null, to: "1", message: "Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling 😎" },
-
-  // ];
-
   
 
   const handleSend = async () => {
@@ -133,9 +122,7 @@ export default function ChatRoom() {
         </TouchableOpacity>
     </View>
 
-    {/* <View style={{ alignItems: "center" , margin: 10}}>
-        <Text style={{color: "#660000"}}>Your Partner Disconnected!</Text>
-    </View> */}
+
     <FlatList
       ref={flatListRef}
       data={[...messages].reverse()} // reverse manually if needed
@@ -154,6 +141,8 @@ export default function ChatRoom() {
       )}
       style={styles.messages}
     />
+
+
 
 
 

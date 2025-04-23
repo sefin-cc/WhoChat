@@ -9,6 +9,7 @@ import { store } from '@/redux/store';
 import { useFonts, Rubik_400Regular, Rubik_500Medium  } from '@expo-google-fonts/rubik';
 import Toast from 'react-native-toast-message';
 import usePusher from '../hooks/usePusher';
+import CustomToast from '@/components/CustomToast';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
@@ -38,7 +39,7 @@ export default function RootLayout() {
       </Stack>
       {/* <StatusBar style="auto" /> */}
       <PusherListener />
-      <Toast />
+      <CustomToast />
     </Provider>
   );
 }
