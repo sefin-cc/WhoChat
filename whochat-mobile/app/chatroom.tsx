@@ -57,7 +57,6 @@ export default function ChatRoom() {
   const handleReconnect = async () => {
     if (userId) {
       setWaiting(true);
-      dispatch(clearChat());
       const res = await reconnectUser({ user_id: userId }).unwrap();
       dispatch(setUserIds({ userId: userId, partnerId: res.partner_id }));
     }
@@ -66,6 +65,7 @@ export default function ChatRoom() {
   useEffect(() =>{
     if(partnerId){
       setWaiting(false);
+      dispatch(clearChat());
     }
   },[partnerId, dispatch]);
 
