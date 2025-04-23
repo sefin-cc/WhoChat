@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Button, TextInput, FlatList, StyleSheet, StatusBar, TouchableOpacity, Modal, ActivityIndicator, TouchableHighlight } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
-import { setUserIds } from '../redux/chatSlice';
+import { addMessage, setUserIds } from '../redux/chatSlice';
 import { AppState } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
@@ -12,7 +12,7 @@ import {
   useSendHeartbeatMutation
 } from '../services/chatApi';
 
-import usePusher from '../hooks/usePusher';
+
 import { router } from 'expo-router';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
@@ -30,22 +30,30 @@ export default function ChatRoom() {
 
   const [sendHeartbeat] = useSendHeartbeatMutation();
 
-  const fakeMessages = [
-    { from: "2", to: "1", message: "Hey, how are you?" },
-    { from: null, to: "2", message: "I'm good! You?" },
-    { from: "2", to: "1", message: "Doing great, just chilling 😎" },
-    { from: "2", to: "1", message: "Hey, how are you?" },
-    { from: null, to: "2", message: "I'm good! You?" },
-    { from: null, to: "1", message: "Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling 😎" },
+  // const fakeMessages = [
+  //   { from: "2", to: "1", message: "Hey, how are you?" },
+  //   { from: null, to: "2", message: "I'm good! You?" },
+  //   { from: "2", to: "1", message: "Doing great, just chilling 😎" },
+  //   { from: "2", to: "1", message: "Hey, how are you?" },
+  //   { from: null, to: "2", message: "I'm good! You?" },
+  //   { from: null, to: "1", message: "Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling 😎" },
 
-  ];
+  // ];
 
-  usePusher();
+  
 
   const handleSend = async () => {
     if (message.trim() && userId && partnerId) {
       await sendMessage({ message, from: userId, to: partnerId });
-      setMessage('');
+
+      // ADD the sent message locally immediately
+      dispatch(addMessage({
+        from: String(userId),
+        to: String(partnerId),
+        message: message,
+      }));
+
+      setMessage(''); // clear input field
     }
   };
 
@@ -128,27 +136,26 @@ export default function ChatRoom() {
     {/* <View style={{ alignItems: "center" , margin: 10}}>
         <Text style={{color: "#660000"}}>Your Partner Disconnected!</Text>
     </View> */}
-
     <FlatList
-        ref={flatListRef}
-        data={fakeMessages}
-        inverted 
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={({ item }) => (
-            item.from === userId ? (
-            <View style={{ alignSelf: 'flex-end', backgroundColor: '#A38285', margin: 2, padding: 10, paddingHorizontal:15, borderRadius: 20 }}>
-                <Text style={{ color: '#fff', fontFamily: "Rubik_400Regular" }}>{item.message}</Text>
-            </View>
-            ) : (
-            <View style={{ alignSelf: 'flex-start', backgroundColor: '#47050A', margin: 2, padding: 10, paddingHorizontal:15, borderRadius: 20 }}>
-                <Text style={{ color: '#fff', fontFamily: "Rubik_400Regular" }}>{item.message}</Text>
-            </View>
-            )
-        )}
-        style={styles.messages}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        />
+      ref={flatListRef}
+      data={[...messages].reverse()} // reverse manually if needed
+      inverted
+      keyExtractor={(_, index) => index.toString()}
+      renderItem={({ item }) => (
+        item.from === String(userId) ? (
+          <View style={{ alignSelf: 'flex-end', backgroundColor: '#A38285', margin: 2, padding: 10, paddingHorizontal:15, borderRadius: 20 }}>
+            <Text style={{ color: '#fff', fontFamily: "Rubik_400Regular" }}>{item.message}</Text>
+          </View>
+        ) : (
+          <View style={{ alignSelf: 'flex-start', backgroundColor: '#47050A', margin: 2, padding: 10, paddingHorizontal:15, borderRadius: 20 }}>
+            <Text style={{ color: '#fff', fontFamily: "Rubik_400Regular" }}>{item.message}</Text>
+          </View>
+        )
+      )}
+      style={styles.messages}
+    />
+
+
 
 
     <View style={{flexDirection:"row",  width: "100%", alignItems: "center", justifyContent: "center", paddingVertical: 15}}>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Events\RandomChat;
 use Illuminate\Support\Facades\Cache;
+use App\Events\TestBroadcastEvent;
 
 class ChatController extends Controller
 {
@@ -16,14 +17,20 @@ class ChatController extends Controller
     {
         $user_id = uniqid();
     
+        // Check if the 'online_users' and 'waiting_users' exist in cache
         if (!Cache::has('online_users')) {
             Cache::put('online_users', 0, now()->addDays(1));
         }
+    
         if (!Cache::has('waiting_users')) {
             Cache::put('waiting_users', [], now()->addDays(1));
         }
     
-        Cache::increment('online_users');
+        // Check if the user already exists
+        if (!Cache::has('user_' . $user_id)) {
+            // If the user does not exist, increment the online users count
+            Cache::increment('online_users');
+        }
     
         // Save this user's status
         Cache::put('user_' . $user_id, 'online', now()->addSeconds(30)); // Expires after 30 seconds if no heartbeat
@@ -31,9 +38,11 @@ class ChatController extends Controller
         $waiting_users = Cache::get('waiting_users', []);
     
         if (!empty($waiting_users)) {
+            // If there's a waiting user, pair them up
             $waiting_user = array_shift($waiting_users);
             Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
     
+            // Pair the users
             $this->pairUsers($user_id, $waiting_user);
     
             return response()->json([
@@ -42,6 +51,7 @@ class ChatController extends Controller
                 'partner_id' => $waiting_user,
             ]);
         } else {
+            // If no waiting user, add the current user to the waiting list
             $waiting_users[] = $user_id;
             Cache::put('waiting_users', $waiting_users, now()->addMinutes(5));
     
@@ -51,6 +61,7 @@ class ChatController extends Controller
             ]);
         }
     }
+    
     
 
     /**
@@ -181,9 +192,10 @@ class ChatController extends Controller
     {
         Cache::put('partner_' . $user1, $user2, now()->addMinutes(30));
         Cache::put('partner_' . $user2, $user1, now()->addMinutes(30));
-    
-        broadcast(new RandomChat('Connected!', $user1, $user2));
-        broadcast(new RandomChat('Connected!', $user2, $user1));
+
+        // Fire UserPaired Event for BOTH users
+        broadcast(new \App\Events\UserPaired($user1, $user2));
+        broadcast(new \App\Events\UserPaired($user2, $user1));
     }
 
     private function cleanup()
@@ -198,6 +210,13 @@ class ChatController extends Controller
         }
 
         Cache::put('waiting_users', $alive_waiting, now()->addMinutes(5));
+    }
+
+    public function triggerTestBroadcast()
+    {
+        broadcast(new TestBroadcastEvent('This is a test broadcast message!'));
+
+        return response()->json(['status' => 'Test broadcast sent']);
     }
 
 }

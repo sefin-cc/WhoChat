@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import Pusher from 'pusher-js/react-native';
+import Pusher from 'pusher-js';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { addMessage, setUserIds } from '../redux/chatSlice';
@@ -16,24 +16,30 @@ export default function usePusher() {
   const userId = useSelector((state: RootState) => state.chat.userId);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) return; // Prevent subscribing before userId is available
 
+    // Initialize Pusher with pusher-js
     const pusher = new Pusher(PUSHER_APP_KEY, {
       cluster: PUSHER_APP_CLUSTER,
-      authEndpoint: BACKEND_URL, 
+      authEndpoint: BACKEND_URL,
     });
 
-    const channel = pusher.subscribe(`private-chat.${userId}`);
+    // Subscribe to the private channel for the current user
+    const channel = pusher.subscribe(`chat.${userId}`);
 
-    channel.bind('App\\Events\\RandomChat', (data: any) => {
+    // Listen for RandomChat messages
+    channel.bind('random.chat.message', (data: any) => {
       if (data.message === 'PartnerDisconnected') {
         console.log('Your partner disconnected');
         Alert.alert('Disconnected', 'Your partner has disconnected.');
 
+        // Reset user and partner IDs in the Redux store
         dispatch(setUserIds({ userId: userId, partnerId: null }));
 
+        // Redirect to the waiting screen
         router.replace('/');
       } else {
+        // Add the received message to the Redux store
         dispatch(addMessage({
           from: data.from,
           to: data.to,
@@ -42,10 +48,34 @@ export default function usePusher() {
       }
     });
 
+    // Listen for the 'UserPaired' event to notify both users about the pairing
+    channel.bind('UserPaired', (data: any) => {
+      console.log('Paired event received:', data);
+
+      // If you haven't set your userId yet, do it now
+      if (!userId) {
+        dispatch(setUserIds({
+          userId: data.your_id,
+          partnerId: data.partner_id,
+        }));
+      } else {
+        // If userId exists, just update partner
+        dispatch(setUserIds({
+          userId: userId,
+          partnerId: data.partner_id,
+        }));
+      }
+
+      // Navigate to chatroom immediately
+      router.replace('/chatroom');
+    });
+
+    // Cleanup
     return () => {
-      channel.unbind_all();
-      channel.unsubscribe();
+      pusher.unsubscribe(`private-chat.${userId}`);
       pusher.disconnect();
     };
   }, [userId, dispatch]);
+
+  return null;
 }

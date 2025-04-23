@@ -7,10 +7,11 @@ import { useEffect, useState } from 'react';
 import { RootState } from '../redux/store';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import usePusher from '@/hooks/usePusher';
 
 export default function HomeScreen() {
   const dispatch = useDispatch();
-  const [connectUser] = useConnectUserMutation(); 
+  const [connectUser, {isLoading}] = useConnectUserMutation(); 
   const [disconnectUser] = useDisconnectUserMutation();
   const { data: statusData } = useFetchStatusQuery(undefined, { pollingInterval: 5000 });
   const { partnerId, userId } = useSelector((state: RootState) => state.chat);
@@ -18,15 +19,15 @@ export default function HomeScreen() {
 
   
   const handleConnect = async () => {
-    // try {
-    //   const res = await connectUser().unwrap();
-    //   dispatch(setUserIds({ userId: res.your_id, partnerId: res.partner_id }));
-    //   console.log(res);
-    //   setWaiting(true);
-    // } catch (error) {
-    //   console.error('Connect failed', error);
-    // }
-    router.push('/chatroom');  
+    try {
+      const res = await connectUser().unwrap();
+      dispatch(setUserIds({ userId: res.your_id, partnerId: res.partner_id }));
+      // console.log(res);
+      setWaiting(true);
+    } catch (error) {
+      console.error('Connect failed', error);
+    }
+    
   };
 
   const handleDisconnect = async () => {
@@ -44,11 +45,11 @@ export default function HomeScreen() {
   useEffect(() => {
     if (partnerId) {
       setWaiting(false);
-      router.push('/chatroom');  
+      router.replace('/chatroom');  
     }
   }, [partnerId]); 
 
-
+  // usePusher(); 
 
   return (
     <View style={styles.container}>
@@ -74,7 +75,13 @@ export default function HomeScreen() {
           style={styles.button}
           underlayColor="#FF9000"
         >
-          <Text style={styles.buttonText}>CHAT NOW  <FontAwesome6 name="fire" size={16} color="#fff" /></Text> 
+          {
+            isLoading ?  <ActivityIndicator size={24} color="white" />: 
+            <Text style={styles.buttonText}>
+              CHAT NOW  <FontAwesome6 name="fire" size={16} color="#fff" />
+            </Text> 
+          }
+
       </TouchableHighlight>
     </View>
       

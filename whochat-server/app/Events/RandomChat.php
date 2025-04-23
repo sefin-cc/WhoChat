@@ -3,10 +3,10 @@
 namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Queue\SerializesModels;
 
-class RandomChat implements ShouldBroadcast
+class RandomChat implements ShouldBroadcastNow
 {
     use SerializesModels;
 
@@ -21,13 +21,24 @@ class RandomChat implements ShouldBroadcast
         $this->to = $to;
     }
 
+    /**
+     * The channels the event should broadcast on.
+     *
+     * @return \Illuminate\Broadcasting\Channel|array
+     */
     public function broadcastOn()
     {
-        return new Channel('random-chat');
+        // Broadcast to the channel of the receiver (user-specific channel)
+        return new Channel('chat.' . $this->to);  // This is targeting 'chat.{userId}' channel
     }
 
+    /**
+     * The name of the event to broadcast.
+     *
+     * @return string
+     */
     public function broadcastAs()
     {
-        return 'random.chat.message';
+        return 'random.chat.message';  // This is the event name the frontend will listen for
     }
 }
