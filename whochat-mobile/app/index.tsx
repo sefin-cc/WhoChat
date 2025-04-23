@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Image, StyleSheet, View, Text, TouchableHighlight, Modal, ActivityIndicator, StatusBar } from 'react-native';
+import { Image, StyleSheet, View, Text, TouchableHighlight, Modal, ActivityIndicator } from 'react-native';
 import { useFetchStatusQuery, useConnectUserMutation, useDisconnectUserMutation } from '../services/chatApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearChat, setUserIds } from '@/redux/chatSlice';
@@ -53,8 +53,6 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
 
-    <StatusBar translucent={true} barStyle={"light-content"}/>
-
       <View style={{padding: 20, alignItems: "center"}}>
         <Ionicons name="chatbubble-ellipses" size={100} color="#FF9000" />
         <Text style={[styles.text, {fontSize: 50, marginBottom: -10, fontFamily: "Rubik_500Medium" }]}>WhoChat</Text>
@@ -89,7 +87,7 @@ export default function HomeScreen() {
         <View style={styles.modalBackground}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size={60} color="black" />
-            <Text style={[styles.text, {color: "#19090e", marginTop: 20}]}>Waiting for a Partner..</Text>
+            <Text style={[styles.text, {color: "#19090e", marginTop: 20}]}>Waiting for a Stranger..</Text>
             <TouchableHighlight
               onPress={handleDisconnect}
               style={styles.button}
