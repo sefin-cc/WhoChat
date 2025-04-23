@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Button, TextInput, FlatList, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
+import { View, Text, Button, TextInput, FlatList, StyleSheet, StatusBar, TouchableOpacity, Modal, ActivityIndicator, TouchableHighlight } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { setUserIds } from '../redux/chatSlice';
@@ -19,6 +19,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 export default function ChatRoom() {
   const dispatch = useDispatch();
   const flatListRef = useRef<FlatList>(null);
+  const [waiting, setWaiting] = useState(false);
   const { userId, partnerId, messages } = useSelector((state: RootState) => state.chat);
 
   const [message, setMessage] = useState('');
@@ -35,7 +36,7 @@ export default function ChatRoom() {
     { from: "2", to: "1", message: "Doing great, just chilling 😎" },
     { from: "2", to: "1", message: "Hey, how are you?" },
     { from: null, to: "2", message: "I'm good! You?" },
-    { from: "2", to: "1", message: "Doing great, just chilling 😎" },
+    { from: null, to: "1", message: "Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling Doing great, just chilling 😎" },
 
   ];
 
@@ -58,10 +59,17 @@ export default function ChatRoom() {
 
   const handleReconnect = async () => {
     if (userId) {
+      setWaiting(true);
       const res = await reconnectUser({ user_id: userId }).unwrap();
       dispatch(setUserIds({ userId: userId, partnerId: res.partner_id }));
     }
   };
+
+  useEffect(() =>{
+    if(partnerId){
+      setWaiting(false);
+    }
+  },[partnerId, dispatch]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -110,7 +118,7 @@ export default function ChatRoom() {
         </View>
 
         <TouchableOpacity
-            onPress={handleDisconnect}
+            onPress={handleReconnect}
             style={styles.button}
         >
            <MaterialIcons name="exit-to-app" size={30} color="#fff" />
@@ -128,11 +136,11 @@ export default function ChatRoom() {
         keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
             item.from === userId ? (
-            <View style={{ alignSelf: 'flex-end', backgroundColor: '#A38285', margin: 5, padding: 10, paddingHorizontal:20, borderRadius: 34 }}>
+            <View style={{ alignSelf: 'flex-end', backgroundColor: '#A38285', margin: 2, padding: 10, paddingHorizontal:15, borderRadius: 20 }}>
                 <Text style={{ color: '#fff', fontFamily: "Rubik_400Regular" }}>{item.message}</Text>
             </View>
             ) : (
-            <View style={{ alignSelf: 'flex-start', backgroundColor: '#47050A', margin: 5, padding: 10, paddingHorizontal:20, borderRadius: 20 }}>
+            <View style={{ alignSelf: 'flex-start', backgroundColor: '#47050A', margin: 2, padding: 10, paddingHorizontal:15, borderRadius: 20 }}>
                 <Text style={{ color: '#fff', fontFamily: "Rubik_400Regular" }}>{item.message}</Text>
             </View>
             )
@@ -160,7 +168,23 @@ export default function ChatRoom() {
     </View>
 
 
-    {/* <Button title="Reconnect" onPress={handleReconnect} color="green" /> */}
+ 
+
+    <Modal transparent={true} visible={waiting} animationType="fade">
+        <View style={styles.modalBackground}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size={60} color="black" />
+            <Text style={[styles.text, {color: "#19090e", marginTop: 20}]}>Waiting for a Partner..</Text>
+            <TouchableHighlight
+              onPress={handleDisconnect}
+              style={styles.buttonExit}
+              underlayColor="#FF9000"
+            >
+              <Text style={styles.buttonText}>Exit</Text> 
+            </TouchableHighlight>
+          </View>
+        </View>
+      </Modal>
     
 
     </View>
@@ -191,5 +215,40 @@ button: {
     padding: 10,
     alignItems: "center",
     justifyContent: "center",
-}
+},
+text: {
+  color: "#fff",
+  fontSize: 18,
+  marginBottom: 10,
+  fontFamily: "Rubik_400Regular"
+},
+buttonExit: {
+  backgroundColor: "#19090E",
+  paddingVertical: 20,
+  paddingHorizontal: 60,
+  borderRadius: 10,
+  marginTop: 20,
+  width: "100%",
+},
+buttonText: {
+  color: "#fff",
+  fontWeight: "bold",
+  fontSize: 16,
+  textAlign: "center",
+  fontFamily: "Rubik_500Medium"
+},
+modalBackground: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.5)', 
+  justifyContent: 'center',
+  alignItems: 'center'
+},
+loadingContainer: {
+  padding:20,
+  backgroundColor: 'white',
+  borderRadius: 15,
+  width:"70%",
+  justifyContent: "center",
+  alignItems: "center"
+},
 });
