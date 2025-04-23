@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { RootState } from '../redux/store';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import usePusher from '@/hooks/usePusher';
+
 
 export default function HomeScreen() {
   const dispatch = useDispatch();
@@ -23,7 +23,6 @@ export default function HomeScreen() {
       const res = await connectUser().unwrap();
       dispatch(clearChat());
       dispatch(setUserIds({ userId: res.your_id, partnerId: res.partner_id }));
-      // console.log(res);
       setWaiting(true);
     } catch (error) {
       console.error('Connect failed', error);
@@ -50,7 +49,6 @@ export default function HomeScreen() {
     }
   }, [partnerId]); 
 
-  // usePusher(); 
 
   return (
     <View style={styles.container}>
