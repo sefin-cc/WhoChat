@@ -35,18 +35,17 @@ const chatSlice = createSlice({
         
         Toast.show({
           type: 'info',
-          position: 'top',
+          position: 'top', 
           text1: 'Your partner left the chat!',
-          visibilityTime: 6000,
+          visibilityTime: 6000, 
           autoHide: true,
-          bottomOffset: 50,
+          topOffset: 100,
         });
+        
       }
       
     },
     clearChat: (state) => {
-      state.userId = null;
-      state.partnerId = null;
       state.messages = [];
     },
   },

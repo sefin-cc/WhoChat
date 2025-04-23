@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { addMessage, setUserIds } from '../redux/chatSlice';
 import Constants from 'expo-constants';
-import { Alert } from 'react-native';
 import { router } from 'expo-router';
 
 const BACKEND_URL = Constants.expoConfig?.extra?.BACKEND_URL;
@@ -29,23 +28,14 @@ export default function usePusher() {
 
     // Listen for RandomChat messages
     channel.bind('random.chat.message', (data: any) => {
-      if (data.message === 'PartnerDisconnected') {
-        console.log('Your partner disconnected');
-        Alert.alert('Disconnected', 'Your partner has disconnected.');
 
-        // Reset user and partner IDs in the Redux store
-        dispatch(setUserIds({ userId: userId, partnerId: null }));
-
-        // Redirect to the waiting screen
-        router.replace('/');
-      } else {
-        // Add the received message to the Redux store
-        dispatch(addMessage({
-          from: data.from,
-          to: data.to,
-          message: data.message,
-        }));
-      }
+      // Add the received message to the Redux store
+      dispatch(addMessage({
+        from: data.from,
+        to: data.to,
+        message: data.message,
+      }));
+      
     });
 
     // Listen for the 'UserPaired' event to notify both users about the pairing
@@ -64,6 +54,8 @@ export default function usePusher() {
           userId: userId,
           partnerId: data.partner_id,
         }));
+
+
       }
 
       // Navigate to chatroom immediately

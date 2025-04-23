@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Button, TextInput, FlatList, StyleSheet, StatusBar, TouchableOpacity, Modal, ActivityIndicator, TouchableHighlight } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
-import { addMessage, setUserIds } from '../redux/chatSlice';
+import { addMessage, clearChat, setUserIds } from '../redux/chatSlice';
 import { AppState } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {
@@ -57,6 +57,7 @@ export default function ChatRoom() {
   const handleReconnect = async () => {
     if (userId) {
       setWaiting(true);
+      dispatch(clearChat());
       const res = await reconnectUser({ user_id: userId }).unwrap();
       dispatch(setUserIds({ userId: userId, partnerId: res.partner_id }));
     }
@@ -68,6 +69,8 @@ export default function ChatRoom() {
     }
   },[partnerId, dispatch]);
 
+
+  
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
   
@@ -97,13 +100,18 @@ export default function ChatRoom() {
     const appStateListener = AppState.addEventListener('change', handleAppStateChange);
   
     // Start heartbeat initially
-    startHeartbeat();
+    if (!userId) {
+      router.replace('/'); // redirect to home if no userId
+    } else {
+      startHeartbeat();
+    }
   
     return () => {
       stopHeartbeat();
       appStateListener.remove(); // Clean up listener
     };
   }, [userId]);
+  
 
   return (
     <View style={styles.container}>

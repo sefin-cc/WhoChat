@@ -109,9 +109,8 @@ class ChatController extends Controller
         Cache::forget('partner_' . $user_id);
         Cache::forget('partner_' . $partner_id);
         
-        // Send a message to both users
+      
         broadcast(new RandomChat("{$partner_id}-Disconnected", $partner_id, $user_id)); // notify partner
-       // broadcast(new RandomChat("{$partner_id}-Disconnected", $user_id, $partner_id)); // notify user
     }
 
     // Broadcast the user's own disconnection
@@ -129,6 +128,21 @@ class ChatController extends Controller
     {
         $user_id = $request->input('user_id');
     
+        // First, disconnect from the current partner if exists
+        $partner_id = Cache::get('partner_' . $user_id);
+        if ($partner_id) {
+            // Notify the partner
+            broadcast(new RandomChat("{$user_id}-Disconnected", $user_id, $partner_id));
+    
+            // Remove partner mappings
+            Cache::forget('partner_' . $user_id);
+            Cache::forget('partner_' . $partner_id);
+    
+            // Notify the user
+            broadcast(new RandomChat("{$partner_id}-Disconnected", $partner_id, $user_id));
+        }
+    
+        // Now try to find a new partner
         if (!Cache::has('waiting_users')) {
             Cache::put('waiting_users', [], now()->addDays(1));
         }
