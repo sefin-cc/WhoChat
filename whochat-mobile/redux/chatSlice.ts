@@ -36,7 +36,7 @@ const chatSlice = createSlice({
         Toast.show({
           type: 'info',
           position: 'top', 
-          text1: 'Your partner left the chat!',
+          text1: 'Stranger left the chat!',
           visibilityTime: 6000, 
           autoHide: true,
           topOffset: 100,

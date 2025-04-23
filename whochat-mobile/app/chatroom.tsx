@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Button, TextInput, FlatList, StyleSheet, StatusBar, TouchableOpacity, Modal, ActivityIndicator, TouchableHighlight } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Modal, ActivityIndicator, TouchableHighlight } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { addMessage, clearChat, setUserIds } from '../redux/chatSlice';
@@ -115,11 +115,11 @@ export default function ChatRoom() {
 
   return (
     <View style={styles.container}>
-    <StatusBar translucent={false} barStyle={"dark-content"}/>
+
     <View style={{flexDirection:"row",  width: "100%", backgroundColor: "#660000", padding: 10 }}>
         <View style={{ flex: 1 }}>
             <Text style={{color: "#fff"}}>Your ID: {userId}</Text>
-            <Text style={{color: "#fff"}}>Partner ID: {partnerId || 'Waiting for partner...'}</Text>
+            <Text style={{color: "#fff"}}>Partner ID: {partnerId || '...'}</Text>
         </View>
 
         <TouchableOpacity
@@ -178,7 +178,7 @@ export default function ChatRoom() {
         <View style={styles.modalBackground}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size={60} color="black" />
-            <Text style={[styles.text, {color: "#19090e", marginTop: 20}]}>Waiting for a Partner..</Text>
+            <Text style={[styles.text, {color: "#19090e", marginTop: 20}]}>Waiting for a Stranger..</Text>
             <TouchableHighlight
               onPress={handleDisconnect}
               style={styles.buttonExit}
