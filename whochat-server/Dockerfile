@@ -18,7 +18,8 @@ COPY . .
 RUN mkdir -p /var/www/database && touch /var/www/database/database.sqlite
 
 # Install PHP dependencies without dev packages
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-scripts
+
 
 # Expose Laravel development server port
 EXPOSE 8080
