@@ -17,7 +17,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/icon.png",
-        backgroundColor: "transparent",
+        backgroundColor: "#660000",
       },
       package: "com.rsgt.whochat"
     },
