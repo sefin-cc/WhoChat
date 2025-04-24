@@ -24,4 +24,8 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 # Expose Laravel development server port
 EXPOSE 8080
 
+# Copy entrypoint script
+COPY entrypoint.sh /start.sh
+RUN chmod +x /start.sh
 
+CMD ["/start.sh"]
