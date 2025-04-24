@@ -4,6 +4,12 @@ echo "Running Laravel setup steps..."
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
+# Create .env if it doesn't exist
+if [ ! -f .env ]; then
+  echo "Creating default .env from Render env variables..."
+  cp .env.example .env
+fi
+
 echo "Clearing config..."
 php artisan config:clear
 
