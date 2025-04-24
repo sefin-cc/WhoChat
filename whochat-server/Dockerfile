@@ -25,7 +25,7 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts
 EXPOSE 8080
 
 # Copy entrypoint script
-COPY entrypoint.sh /start.sh
+COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
 CMD ["/start.sh"]
