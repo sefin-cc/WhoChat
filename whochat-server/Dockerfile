@@ -11,21 +11,29 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Set working directory
 WORKDIR /var/www
 
-# Copy everything into the container
+# Copy application code
 COPY . .
 
-# Ensure SQLite database directory and file exist
+# Set dummy env vars to avoid failures during build
+ENV BROADCAST_DRIVER=log \
+    PUSHER_APP_ID=dummy \
+    PUSHER_APP_KEY=dummy \
+    PUSHER_APP_SECRET=dummy
+
+# Ensure SQLite database directory and file exist (optional for local dev)
 RUN mkdir -p /var/www/database && touch /var/www/database/database.sqlite
 
-# Install dependencies
+# Install PHP dependencies without dev packages
 RUN composer install --no-dev --optimize-autoloader
 
-# Run migrations to create the necessary tables
-RUN php artisan migrate --force
-
-# Generate Laravel app key (optional)
+# Generate application key
 RUN php artisan key:generate
 
+# Run database migrations
+RUN php artisan migrate --force
+
+# Expose port for Laravel's built-in server
 EXPOSE 8080
 
+# Start Laravel server (host 0.0.0.0 for Docker compatibility)
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
