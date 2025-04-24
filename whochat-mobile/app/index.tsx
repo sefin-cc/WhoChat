@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { RootState } from '../redux/store';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-
+import NetInfo from '@react-native-community/netinfo';
 
 export default function HomeScreen() {
   const dispatch = useDispatch();
@@ -16,7 +16,7 @@ export default function HomeScreen() {
   const { data: statusData } = useFetchStatusQuery(undefined, { pollingInterval: 5000 });
   const { partnerId, userId } = useSelector((state: RootState) => state.chat);
   const [waiting, setWaiting] = useState(false);
-
+  const [isConnected, setIsConnected] = useState(true); 
   
   const handleConnect = async () => {
     try {
@@ -49,6 +49,16 @@ export default function HomeScreen() {
     }
   }, [partnerId]); 
 
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const connected = !!state.isConnected;
+      setIsConnected(connected);
+    });
+  
+    return () => unsubscribe();
+  }, []);
+  
+
 
   return (
     <View style={styles.container}>
@@ -69,8 +79,12 @@ export default function HomeScreen() {
     <View style={{ paddingVertical: 40, width: "100%" }}>
       <TouchableHighlight
           onPress={handleConnect}
-          style={styles.button}
+          style={[
+            styles.button,
+            (!isConnected || isLoading || waiting) && { backgroundColor: '#3e2f34' }
+          ]}
           underlayColor="#FF9000"
+          disabled={isLoading || waiting || !isConnected}
         >
           {
             isLoading ?  <ActivityIndicator size={24} color="white" />: 
