@@ -5,7 +5,7 @@ export default {
   expo: {
     name: "WhoChat",
     slug: "whochat-mobile",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "myapp",
@@ -19,6 +19,11 @@ export default {
         foregroundImage: "./assets/images/icon.png",
         backgroundColor: "#660000",
       },
+      splash: {
+        image: "./assets/images/icon.png",
+        resizeMode: "contain",
+        backgroundColor: "#660000",
+      },
       package: "com.rsgt.whochat"
     },
     web: {
@@ -28,15 +33,6 @@ export default {
     },
     plugins: [
       "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          image: "./assets/images/splash-icon.png",
-          imageWidth: 200,
-          resizeMode: "contain",
-          backgroundColor: "#ffffff",
-        }
-      ],
       "expo-font"
     ],
     experiments: {
